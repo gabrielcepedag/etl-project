@@ -1,0 +1,25 @@
+warehouse:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      # account: '{{ env_var("SNOWFLAKE_ACCOUNT") }}'
+
+      # User/password auth
+      # user: '{{ env_var("SNOWFLAKE_USERNAME") }}'
+      # password: '{{ env_var("SNOWFLAKE_PASSWORD") }}'
+
+      # role: '{{ env_var("SNOWFLAKE_ROLE") }}'
+      # database: '{{ env_var("SNOWFLAKE_DATABASE") }}'
+      # warehouse: '{{ env_var("SNOWFLAKE_WAREHOUSE") }}'
+      # schema: '{{ env_var("SNOWFLAKE_SCHEMA") }}'
+
+      account: NKYDAUO-FNC53014
+      user: gcepedag
+      password:
+      role: ACCOUNTADMIN
+      database: DWH_PROJECT2
+      warehouse: COMPUTE_WH
+      schema: RAW
+      threads: 12
+      client_session_keep_alive: False

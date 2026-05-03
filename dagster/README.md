@@ -1,47 +1,122 @@
-# analytics
+# Dagster ETL Pipeline
 
-This is a [Dagster](https://dagster.io/) project scaffolded with [`dagster project scaffold`](https://docs.dagster.io/guides/build/projects/creating-a-new-project).
+This module handles the extraction and loading of raw seismic data using Dagster as the orchestration layer. It is the first stage in a broader data pipeline that moves data from a public API into a data warehouse for analysis.
 
-## Getting started
+## Architecture overview
 
-First, install your Dagster code location as a Python package. By using the --editable flag, pip will install your Python package in ["editable mode"](https://pip.pypa.io/en/latest/topics/local-project-installs/#editable-installs) so that as you develop, local code changes will automatically apply.
+```
+USGS Earthquake API
+        |
+        v
+  Dagster (ETL)          <-- this module
+        |
+        v
+  PostgreSQL (RDS)       Raw staging layer
+        |
+        v
+   Airbyte               Moves data from Postgres to Snowflake
+        |
+        v
+  Snowflake (DWH)        Data warehouse
+        |
+        v
+     dbt                 Transforms raw data into a dimensional model
+```
+
+## Data source
+
+We use the **USGS Earthquake Hazards Program API**, a free and public REST API that provides real-time and historical earthquake data in GeoJSON format.
+
+- Endpoint: `https://earthquake.usgs.gov/fdsnws/event/1/query`
+- No API key required
+- We pull up to 1000 events per run, filtered by magnitude >= 1.0, ordered by most recent
+
+## Project structure
+
+```
+dagster/
+  analytics/
+    __init__.py       Package init
+    ops.py            Individual units of work (extract, transform, load)
+    jobs.py           Wires ops together into a complete pipeline
+    schedules.py      Defines when jobs run automatically
+    definitions.py    Entry point that registers everything with Dagster
+  setup.py            Package dependencies
+```
+
+## The ETL pipeline
+
+The pipeline is made up of three ops that run sequentially:
+
+**1. extract_earthquakes**
+Calls the USGS API and returns a list of raw GeoJSON features. Each feature represents one seismic event and contains a `properties` block with measurements and a `geometry` block with coordinates.
+
+**2. transform_earthquakes**
+Flattens the nested GeoJSON structure into a list of flat dictionaries, one per event. Field names are normalized to match the target schema in Postgres. Coordinates are serialized as a JSON string since they come as an array `[longitude, latitude, depth_km]`.
+
+**3. load_earthquakes**
+Creates the `raw_earthquakes` table in Postgres if it does not exist, truncates it, and bulk-inserts the transformed records using pandas `to_sql`. The table is truncated on every run so it always reflects the latest snapshot from the API.
+
+## Raw table schema
+
+The `raw_earthquakes` table in Postgres holds the data exactly as it comes from the API, with no transformations applied beyond flattening. This is the staging layer — dbt handles all further transformations downstream in Snowflake.
+
+| Column | Type | Description |
+|---|---|---|
+| id | TEXT | Unique event identifier |
+| mag | FLOAT | Magnitude |
+| place | TEXT | Human-readable location |
+| time | BIGINT | Origin time (ms since epoch) |
+| updated | BIGINT | Last updated (ms since epoch) |
+| tz | FLOAT | Timezone offset at event location |
+| url | TEXT | USGS event page |
+| detail | TEXT | URL to full GeoJSON detail |
+| felt | FLOAT | Number of felt reports |
+| cdi | FLOAT | Max reported intensity (DYFI) |
+| mmi | FLOAT | Max instrumental intensity (ShakeMap) |
+| alert | TEXT | PAGER alert level |
+| status | TEXT | Review status (automatic / reviewed) |
+| tsunami | INTEGER | 1 if tsunami message was issued |
+| sig | INTEGER | Significance score (0-1000) |
+| net | TEXT | Authoring network |
+| code | TEXT | Network event code |
+| ids | TEXT | All associated event IDs |
+| sources | TEXT | Contributing networks |
+| types | TEXT | Available product types |
+| nst | FLOAT | Number of stations used |
+| dmin | FLOAT | Distance to nearest station (degrees) |
+| rms | FLOAT | RMS travel time residual (seconds) |
+| gap | FLOAT | Largest azimuthal gap (degrees) |
+| magtype | TEXT | Magnitude calculation method |
+| type | TEXT | Event type (earthquake, quarry blast, etc.) |
+| title | TEXT | Display title |
+| coordinates | TEXT | [longitude, latitude, depth_km] as JSON |
+
+## Schedule
+
+The pipeline runs automatically every day at 6:00 AM via a Dagster schedule. It can also be triggered manually at any time from the Dagster UI.
+
+## Setup
+
+**Requirements:** Python 3.13, conda
 
 ```bash
+conda create -n dagster python=3.13 -y
+conda activate dagster
+cd dagster
 pip install -e ".[dev]"
 ```
 
-Then, start the Dagster UI web server:
+Create a `.env` file at the project root using `.env.template` as reference and fill in the Postgres connection credentials.
 
+**Load environment variables (PowerShell):**
+```powershell
+Get-Content ".env" | Where-Object { $_ -notmatch '^\s*#' -and $_ -match '=' } | ForEach-Object { $parts = $_ -split '=', 2; [System.Environment]::SetEnvironmentVariable($parts[0].Trim(), $parts[1].Trim(), 'Process') }
+```
+
+**Run Dagster:**
 ```bash
 dagster dev
 ```
 
-Open http://localhost:3000 with your browser to see the project.
-
-You can start writing assets in `analytics/assets.py`. The assets are automatically loaded into the Dagster code location as you define them.
-
-## Development
-
-### Adding new Python dependencies
-
-You can specify new Python dependencies in `setup.py`.
-
-### Unit testing
-
-Tests are in the `analytics_tests` directory and you can run tests using `pytest`:
-
-```bash
-pytest analytics_tests
-```
-
-### Schedules and sensors
-
-If you want to enable Dagster [Schedules](https://docs.dagster.io/guides/automate/schedules/) or [Sensors](https://docs.dagster.io/guides/automate/sensors/) for your jobs, the [Dagster Daemon](https://docs.dagster.io/guides/deploy/execution/dagster-daemon) process must be running. This is done automatically when you run `dagster dev`.
-
-Once your Dagster Daemon is running, you can start turning on schedules and sensors for your jobs.
-
-## Deploy on Dagster+
-
-The easiest way to deploy your Dagster project is to use Dagster+.
-
-Check out the [Dagster+ documentation](https://docs.dagster.io/dagster-plus/) to learn more.
+Open `http://127.0.0.1:3000` in the browser, go to Jobs, select `earthquakes_etl`, and launch a run from the Launchpad.

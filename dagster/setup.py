@@ -5,7 +5,11 @@ setup(
     packages=find_packages(exclude=["analytics_tests"]),
     install_requires=[
         "dagster",
-        "dagster-cloud"
+        "dagster-cloud",
+        "requests",
+        "psycopg2-binary",
+        "sqlalchemy",
+        "pandas",
     ],
     extras_require={"dev": ["dagster-webserver", "pytest"]},
 )

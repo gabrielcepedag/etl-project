@@ -1,9 +1,11 @@
-from dagster import Definitions, load_assets_from_modules
+from dagster import Definitions
+from analytics.jobs import earthquakes_etl
+from analytics.schedules import earthquakes_schedule
 
-from analytics import assets  # noqa: TID252
-
-all_assets = load_assets_from_modules([assets])
-
+# The Definitions object is the entry point for Dagster.
+# Everything registered here (jobs, schedules, sensors, assets) becomes
+# visible and executable in the Dagster UI.
 defs = Definitions(
-    assets=all_assets,
+    jobs=[earthquakes_etl],
+    schedules=[earthquakes_schedule],
 )

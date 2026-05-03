@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import pandas as pd
+from datetime import datetime, timezone
 from sqlalchemy import create_engine, text
 from dagster import op, get_dagster_logger
 
@@ -16,7 +17,10 @@ def get_pg_engine():
     db = os.getenv("DB_NAME", "postgres")
     return create_engine(
         f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}",
-        connect_args={"sslmode": "verify-full", "sslrootcert": "./global-bundle.pem"},
+        connect_args={
+            "sslmode": "verify-full",
+            "sslrootcert": os.path.join(os.path.dirname(__file__), "..", "..", "global-bundle.pem"),
+        },
     )
 
 
@@ -134,9 +138,15 @@ def load_earthquakes(data):
                 magtype     TEXT,
                 type        TEXT,
                 title       TEXT,
-                coordinates TEXT
+                coordinates TEXT,
+                inserted_at TIMESTAMP
             )
         """))
+        conn.execute(text("""
+            ALTER TABLE raw_earthquakes
+            ADD COLUMN IF NOT EXISTS inserted_at TIMESTAMP
+        """))
         conn.execute(text("TRUNCATE TABLE raw_earthquakes"))
+    df["inserted_at"] = datetime.now(timezone.utc)
     df.to_sql("raw_earthquakes", engine, if_exists="append", index=False)
     logger.info(f"Loaded {len(df)} rows into raw_earthquakes")

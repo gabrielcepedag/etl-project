@@ -1,11 +1,13 @@
 from dagster import Definitions
 from analytics.jobs import earthquakes_etl
 from analytics.schedules import earthquakes_schedule
+from analytics.assets.airbyte import earthquakes_airbyte_assets, airbyte_workspace
 
-# The Definitions object is the entry point for Dagster.
-# Everything registered here (jobs, schedules, sensors, assets) becomes
-# visible and executable in the Dagster UI.
 defs = Definitions(
+    assets=[*earthquakes_airbyte_assets],
     jobs=[earthquakes_etl],
     schedules=[earthquakes_schedule],
+    resources={
+        "airbyte": airbyte_workspace
+    }
 )

@@ -16,7 +16,7 @@ warehouse:
 
       account: NKYDAUO-FNC53014
       user: gcepedag
-      password:
+      password: "{{ env_var('SNOWFLAKE_PASSWORD')}}"
       role: ACCOUNTADMIN
       database: DWH_PROJECT2
       warehouse: COMPUTE_WH

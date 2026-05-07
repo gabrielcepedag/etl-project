@@ -5,6 +5,9 @@ import pandas as pd
 from datetime import datetime, timezone
 from sqlalchemy import create_engine, text
 from dagster import op, get_dagster_logger
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_pg_engine():
@@ -146,7 +149,6 @@ def load_earthquakes(data):
             ALTER TABLE raw_earthquakes
             ADD COLUMN IF NOT EXISTS inserted_at TIMESTAMP
         """))
-        conn.execute(text("TRUNCATE TABLE raw_earthquakes"))
     df["inserted_at"] = datetime.now(timezone.utc)
     df.to_sql("raw_earthquakes", engine, if_exists="append", index=False)
     logger.info(f"Loaded {len(df)} rows into raw_earthquakes")

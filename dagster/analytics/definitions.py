@@ -1,6 +1,6 @@
 from dagster import Definitions
-from analytics.jobs import earthquakes_etl
-from analytics.schedules import earthquakes_schedule
+from analytics.jobs.jobs import earthquakes_etl
+from analytics.schedules.schedules import earthquakes_schedule
 from analytics.assets.airbyte import earthquakes_airbyte_assets, airbyte_workspace
 
 defs = Definitions(

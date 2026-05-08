@@ -1,5 +1,5 @@
 from dagster import job
-from analytics.ops import extract_earthquakes, transform_earthquakes, load_earthquakes
+from analytics.ops.earthquake import extract_earthquakes, transform_earthquakes, load_earthquakes
 
 
 @job

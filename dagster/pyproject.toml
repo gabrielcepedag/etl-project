@@ -16,7 +16,7 @@ dependencies = [
     "python-dotenv",
     "pandas",
     "sqlalchemy",
-    "psycopg2",
+    "psycopg2-binary",
     "requests"
 ]
 

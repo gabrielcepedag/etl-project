@@ -1,3 +1,3 @@
 SELECT
     *
-FROM {{ ref("stg_earthquakes")}}
+FROM {{ ref("STG_EARTHQUAKES")}}

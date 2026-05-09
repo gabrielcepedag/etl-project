@@ -1,3 +1,3 @@
 SELECT
     *
-FROM {{ source("earthquakes", "raw_earthquakes")}}
+FROM {{ source("EARTHQUAKES", "RAW_EARTHQUAKES")}}

@@ -1,7 +1,7 @@
 sources:
-  - name: earthquakes
+  - name: EARTHQUAKES
     database: RAW
-    schema: public
+    schema: PUBLIC
 
     tables:
-      - name: raw_earthquakes
+      - name: RAW_EARTHQUAKES

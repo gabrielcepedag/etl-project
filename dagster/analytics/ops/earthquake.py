@@ -3,9 +3,12 @@ import json
 import requests
 import pandas as pd
 from datetime import datetime, timezone
+from analytics.resources.postgresql import PostgresqlDatabaseResource
 from sqlalchemy import create_engine, text
 from dagster import op, get_dagster_logger
 from dotenv import load_dotenv
+from analytics.ops.common import upsert_to_database
+from sqlalchemy import Table, MetaData, Column, Integer, String, Float, create_engine, BigInteger, DateTime
 
 load_dotenv()
 
@@ -100,57 +103,46 @@ def transform_earthquakes(features):
 
 
 @op
-def load_earthquakes(data):
-    """
-    Creates the raw_earthquakes table in Postgres if it doesn't exist,
-    truncates it, and bulk-loads the current batch of records.
+def load_earthquakes(data, postgres_conn: PostgresqlDatabaseResource):
 
-    We truncate on each run so the table always reflects the latest
-    snapshot from the API rather than accumulating duplicates.
-    """
-    logger = get_dagster_logger()
-    df = pd.DataFrame(data)
-    engine = get_pg_engine()
-    with engine.begin() as conn:
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS raw_earthquakes (
-                id          TEXT PRIMARY KEY,
-                mag         FLOAT,
-                place       TEXT,
-                time        BIGINT,
-                updated     BIGINT,
-                tz          FLOAT,
-                url         TEXT,
-                detail      TEXT,
-                felt        FLOAT,
-                cdi         FLOAT,
-                mmi         FLOAT,
-                alert       TEXT,
-                status      TEXT,
-                tsunami     INTEGER,
-                sig         INTEGER,
-                net         TEXT,
-                code        TEXT,
-                ids         TEXT,
-                sources     TEXT,
-                types       TEXT,
-                nst         FLOAT,
-                dmin        FLOAT,
-                rms         FLOAT,
-                gap         FLOAT,
-                magtype     TEXT,
-                type        TEXT,
-                title       TEXT,
-                coordinates TEXT,
-                inserted_at TIMESTAMP
-            )
-        """))
-        conn.execute(text("""
-            ALTER TABLE raw_earthquakes
-            ADD COLUMN IF NOT EXISTS inserted_at TIMESTAMP
-        """))
-    df["inserted_at"] = datetime.now(timezone.utc)
-    with engine.begin() as conn:
-        logger.info("Running as SQL.")
-        df.to_sql("raw_earthquakes", conn, if_exists="append", index=False)
-    logger.info(f"Loaded {len(df)} rows into raw_earthquakes")
+    metadata = MetaData()
+    table = Table(
+        "raw_earthquakes",
+        metadata,
+        Column("id", String, primary_key=True, nullable=False),
+        Column("mag", Float),
+        Column("place", String),
+        Column("time", BigInteger),
+        Column("updated", BigInteger),
+        Column("tz", Float),
+        Column("url", String),
+        Column("detail", String),
+        Column("felt", Float),
+        Column("cdi", Float),
+        Column("mmi", Float),
+        Column("alert", String),
+        Column("status", String),
+        Column("tsunami", Integer),
+        Column("sig", Integer),
+        Column("net", String),
+        Column("code", String),
+        Column("ids", String),
+        Column("sources", String),
+        Column("types", String),
+        Column("nst", Float),
+        Column("dmin", Float),
+        Column("rms", Float),
+        Column("gap", Float),
+        Column("magtype", String),
+        Column("type", String),
+        Column("title", String),
+        Column("coordinates", String),
+        Column("inserted_at", DateTime),
+    )
+    engine = postgres_conn.get_engine()
+    upsert_to_database(
+        engine=engine,
+        data=data,
+        table=table,
+        metadata=metadata
+    )

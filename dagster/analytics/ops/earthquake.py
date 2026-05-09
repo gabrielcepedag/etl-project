@@ -22,7 +22,7 @@ def get_pg_engine():
         f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}",
         connect_args={
             "sslmode": "verify-full",
-            "sslrootcert": os.path.join(os.path.dirname(__file__), "..", "..", "global-bundle.pem"),
+            "sslrootcert": os.path.join(os.path.dirname(__file__), "..", "..", "global-bundle.pem"), # TODO: Esto hacerlo dinámico
         },
     )
 

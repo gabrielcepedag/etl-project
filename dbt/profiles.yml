@@ -20,6 +20,6 @@ warehouse:
       role: ACCOUNTADMIN
       database: DWH_PROJECT2
       warehouse: COMPUTE_WH
-      schema: RAW
+      schema: PUBLIC
       threads: 12
       client_session_keep_alive: False

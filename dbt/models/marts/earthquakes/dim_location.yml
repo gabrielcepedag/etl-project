@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: dim_location
+    columns:
+      - name: location_id
+        description: The natural key of the location table
+        tests:
+          - not_null
+          - unique

@@ -17,9 +17,9 @@ cleaned as (
         type,
         status,
         -- PARSE coordinates
-        split_part(trim(both '[]' from coordinates), ',', 1)::float as longitude,
-        split_part(trim(both '[]' from coordinates), ',', 2)::float as latitude,
-        split_part(trim(both '[]' from coordinates), ',', 3)::float as depth,
+        parse_json(coordinates)[0]::float as longitude,
+        parse_json(coordinates)[1]::float as latitude,
+        parse_json(coordinates)[2]::float as depth,
         inserted_at
     from source
 )

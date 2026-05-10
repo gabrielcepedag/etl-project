@@ -12,6 +12,7 @@ dependencies = [
     "dbt-core",
     "dbt-snowflake",
     "dagster-dbt",
+    "dbt-core",
     "dagster-airbyte",
     "python-dotenv",
     "pandas",

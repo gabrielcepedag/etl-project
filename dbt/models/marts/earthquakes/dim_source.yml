@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: dim_source
+    columns:
+      - name: source_id
+        description: The natural key of the source table
+        tests:
+          - not_null
+          - unique

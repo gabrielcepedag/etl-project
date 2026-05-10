@@ -1,0 +1,13 @@
+sources:
+  - name: earthquakes
+    database: RAW
+    schema: PUBLIC
+
+    tables:
+      - name: raw_earthquakes
+        columns:
+          - name: id
+            description: "Unique earthquake identifier"
+            tests:
+              - not_null
+              - unique

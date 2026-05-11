@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: fact_earthquakes
+    description: >
+      Grain: one row per earthquake event.
+      Contains measurable facts (magnitude, significance, tsunami flag, risk index)
+      and foreign keys to dimension tables.
+    columns:
+      - name: id
+        description: Unique earthquake identifier from USGS
+        tests:
+          - not_null
+          - unique
+
+      - name: magnitude
+        description: Richter magnitude of the event
+        tests:
+          - not_null
+
+      - name: significance
+        description: Significance score (0-1000) assigned by USGS
+        tests:
+          - not_null
+
+      - name: risk_index
+        description: Derived risk score (magnitude * significance / 1000)
+        tests:
+          - not_null
+
+      - name: location_id
+        description: Foreign key to dim_location
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location_id
+
+      - name: source_id
+        description: Foreign key to dim_source
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_source')
+              field: source_id
+
+      - name: event_time
+        description: Timestamp of the seismic event
+        tests:
+          - not_null

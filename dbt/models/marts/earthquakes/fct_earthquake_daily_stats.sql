@@ -11,16 +11,16 @@ with daily_agg as (
         l.longitude,
         l.depth,
         count(f.id)                         as event_count,
-        avg(f.mag)                          as avg_magnitude,
-        max(f.mag)                          as max_magnitude,
-        min(f.mag)                          as min_magnitude,
-        sum(f.sig)                          as total_significance,
-        sum(f.tsunami)                      as tsunami_events
+        avg(f.magnitude)                    as avg_magnitude,
+        max(f.magnitude)                    as max_magnitude,
+        min(f.magnitude)                    as min_magnitude,
+        sum(f.significance)                 as total_significance,
+        sum(f.tsunami_caused)               as tsunami_events
     from {{ ref('fact_earthquakes') }} f
     left join {{ ref('dim_location') }} l
         on f.location_id = l.location_id
     where
-        f.mag is not null
+        f.magnitude is not null
         and f.event_time is not null
     group by 1, 2, 3, 4
 ),

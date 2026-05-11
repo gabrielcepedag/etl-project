@@ -8,7 +8,7 @@ class CustomDagsterAirbyteTranslator(DagsterAirbyteTranslator):
         return default_spec.replace_attributes(
             group_name="airbyte_assets",
             key=AssetKey(["EARTHQUAKES", props.table_name.upper()]),
-            automation_condition=AutomationCondition.on_cron("* * * * *")
+            automation_condition=AutomationCondition.on_cron("0 7 * * *")
         )
 
 airbyte_workspace = AirbyteCloudWorkspace(

@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: fct_earthquake_daily_stats
+    description: >
+      Daily aggregated earthquake statistics per geographic location.
+      Used for trend analysis and risk scoring.
+    columns:
+      - name: event_date
+        description: Calendar date of the seismic activity
+        tests:
+          - not_null
+
+      - name: latitude
+        description: Latitude of the earthquake location
+        tests:
+          - not_null
+
+      - name: longitude
+        description: Longitude of the earthquake location
+        tests:
+          - not_null
+
+      - name: event_count
+        description: Number of earthquake events recorded at this location on this date
+        tests:
+          - not_null
+
+      - name: avg_magnitude
+        description: Average Richter magnitude of all events at this location on this date
+        tests:
+          - not_null
+
+      - name: activity_score
+        description: Composite risk score (avg_magnitude * event_count)
+        tests:
+          - not_null

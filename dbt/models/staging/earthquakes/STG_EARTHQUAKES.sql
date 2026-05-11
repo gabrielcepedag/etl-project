@@ -4,6 +4,7 @@ with source as (
 cleaned as (
     select
         id,
+        title,
         mag,
         place,
         -- convertir epoch a timestamp

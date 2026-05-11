@@ -1,5 +1,6 @@
 select
     e.id as ID,
+    e.title as TITLE,
     e.mag as MAGNITUDE,
     e.sig as SIGNIFICANCE,
     e.tsunami AS TSUNAMI_CAUSED,
